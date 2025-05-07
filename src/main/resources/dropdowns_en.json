@@ -1,0 +1,43 @@
+{
+  "creationRaison": [ "BUSINESS",
+    "PERSONAL",
+    "OTHER"],
+  "familySituation": [
+    "Single",
+    "Married",
+    "Divorced",
+    "Widowed"
+  ],
+  "activityStatus": [
+    "Employee",
+    "Self-employed",
+    "Unemployed",
+    "Student",
+    "Retired"
+  ],
+  "professionalActivity": [
+    "Civil employees",
+    "Private sector employees",
+    "Entrepreneurs",
+    "Freelancers"
+  ],
+  "sector": [
+    "Public administration",
+    "Private company",
+    "NGO",
+    "Other"
+  ],
+  "incomeType": [
+    "Salary",
+    "Business income",
+    "Pension",
+    "Other"
+  ],
+  "contractType": [
+    "Permanent contract",
+    "Fixed-term contract",
+    "Internship",
+    "Freelance",
+    "Other"
+  ]
+}

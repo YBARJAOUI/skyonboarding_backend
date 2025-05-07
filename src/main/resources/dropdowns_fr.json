@@ -1,0 +1,45 @@
+{
+  "creationRaison": [
+    "BUSINESS",
+    "PERSONNEL",
+    "OTHER"
+  ],
+  "familySituation": [
+    "Célibataire",
+    "Marié(e)",
+    "Divorcé(e)",
+    "Veuf(ve)"
+  ],
+  "activityStatus": [
+    "Employé",
+    "Travailleur indépendant",
+    "Sans emploi",
+    "Étudiant",
+    "Retraité"
+  ],
+  "professionalActivity": [
+    "Employés civils",
+    "Employés secteur privé",
+    "Entrepreneurs",
+    "Freelances"
+  ],
+  "sector": [
+    "Administration publique",
+    "Entreprise privée",
+    "ONG",
+    "Autre"
+  ],
+  "incomeType": [
+    "Salaire",
+    "Revenu d'entreprise",
+    "Pension",
+    "Autre"
+  ],
+  "contractType": [
+    "CDI",
+    "CDD",
+    "Stage",
+    "Freelance",
+    "Autre"
+  ]
+}
