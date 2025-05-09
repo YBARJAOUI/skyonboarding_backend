@@ -17,6 +17,9 @@ public class Rendezvous {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = true)
+    private String meetUrl;
+
     // Getters and setters
     public Long getId() {
         return id;
@@ -40,5 +43,13 @@ public class Rendezvous {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getMeetUrl() {
+        return meetUrl;
+    }
+
+    public void setMeetUrl(String meetUrl) {
+        this.meetUrl = meetUrl;
     }
 }

@@ -34,6 +34,7 @@ public class User {
     @Column(nullable = false)
     private int faceAttampt = 0;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String signature;
 
     private String carteType;

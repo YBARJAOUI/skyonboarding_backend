@@ -30,9 +30,9 @@ public class UserData {
     @Column(nullable = false)
     private String sexe;
 
-    @Column(nullable = false)
-    private String selfieFace;
 
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
+    private String selfieFace;
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
