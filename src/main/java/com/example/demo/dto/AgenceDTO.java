@@ -1,34 +1,28 @@
-package com.example.demo.entity;
+package com.example.demo.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import java.util.List;
-
-@Entity
-@Table(name = "agence")
-public class Agence {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class AgenceDTO {
     private Long id;
-
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
     private String address;
-
-    @Column(nullable = false)
     private String country;
-
-    @Column
     private Double latitude;
-
-    @Column
     private Double longitude;
+    private int userCount;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "agence")
-    private List<User> users;
+    // Default constructor
+    public AgenceDTO() {
+    }
+
+    // Constructor with all fields
+    public AgenceDTO(Long id, String name, String address, String country, Double latitude, Double longitude, int userCount) {
+        this.id = id;
+        this.name = name;
+        this.address = address;
+        this.country = country;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.userCount = userCount;
+    }
 
     // Getters and setters
     public Long getId() {
@@ -79,11 +73,11 @@ public class Agence {
         this.longitude = longitude;
     }
 
-    public List<User> getUsers() {
-        return users;
+    public int getUserCount() {
+        return userCount;
     }
 
-    public void setUsers(List<User> users) {
-        this.users = users;
+    public void setUserCount(int userCount) {
+        this.userCount = userCount;
     }
 }
