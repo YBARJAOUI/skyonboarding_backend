@@ -7,6 +7,7 @@ import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -64,15 +65,19 @@ public class AgenceController {
         }
     }
 
-    @PutMapping("/assign/{userId}/{agenceId}")
-    public ResponseEntity<User> assignAgenceToUser(@PathVariable Long userId, @PathVariable Long agenceId) {
-        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        Agence agence = agenceService.findById(agenceId).orElseThrow(() -> new RuntimeException("Agence not found"));
+    @PutMapping("/assign/{agenceId}")
+    public ResponseEntity<User> assignAgenceToCurrentUser(
+            @PathVariable Long agenceId,
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        User user = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Agence agence = agenceService.findById(agenceId)
+                .orElseThrow(() -> new RuntimeException("Agence not found"));
         user.setAgence(agence);
         User updatedUser = userService.saveUser(user);
         return ResponseEntity.ok(updatedUser);
     }
-
+//
     @GetMapping("/country/{country}")
     public ResponseEntity<List<Agence>> getAgencesByCountry(@PathVariable String country) {
         List<Agence> agences = agenceService.findByCountry(country);

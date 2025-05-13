@@ -41,16 +41,14 @@ public class RendezvousController {
 
     @PostMapping("/create")
     public ResponseEntity<Rendezvous> createOrUpdateRendezvous(
-            @RequestBody Rendezvous rendezvous) {
-
-        User user = userService.findById(rendezvous.getUser().getId())
+            @RequestBody Rendezvous rendezvous,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Rendezvous existing = rendezvousService.findByUser(user);
         Rendezvous savedRendezvous;
-
         if (existing != null) {
-            // Update all relevant fields
             existing.setDateTime(rendezvous.getDateTime());
             existing.setMeetUrl(rendezvous.getMeetUrl());
             savedRendezvous = rendezvousService.saveRendezvous(existing);
