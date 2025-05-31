@@ -31,8 +31,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/dropdowns/**").authenticated() // Require authentication for dropdown endpoints
+                        .requestMatchers("/auth/**").permitAll()  // Ajouté cette ligne
+                        .requestMatchers("/api/dropdowns/**").authenticated()
                         .anyRequest().authenticated()
+
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

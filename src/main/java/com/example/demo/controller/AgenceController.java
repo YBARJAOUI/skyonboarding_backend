@@ -66,16 +66,49 @@ public class AgenceController {
     }
 
     @PutMapping("/assign/{agenceId}")
-    public ResponseEntity<User> assignAgenceToCurrentUser(
+    public ResponseEntity<Map<String, String>> assignAgenceToCurrentUser(
             @PathVariable Long agenceId,
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
-        User user = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Agence agence = agenceService.findById(agenceId)
-                .orElseThrow(() -> new RuntimeException("Agence not found"));
-        user.setAgence(agence);
-        User updatedUser = userService.saveUser(user);
-        return ResponseEntity.ok(updatedUser);
+
+        try {
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Agence agence = agenceService.findById(agenceId)
+                    .orElseThrow(() -> new RuntimeException("Agence not found"));
+
+            // Assign agence to user
+            user.setAgence(agence);
+            User updatedUser = userService.saveUser(user);
+
+            if (updatedUser != null && updatedUser.getAgence() != null &&
+                    updatedUser.getAgence().getId().equals(agenceId)) {
+                // SUCCESS - Return 000
+                return ResponseEntity.ok(Map.of(
+                        "status", "000",
+                        "message", "Agence assigned successfully"
+                ));
+            } else {
+                // FAILURE - Return 500
+                return ResponseEntity.ok(Map.of(
+                        "status", "500",
+                        "message", "Failed to assign agence to user"
+                ));
+            }
+
+        } catch (RuntimeException e) {
+            // Handle specific business logic errors
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            // FAILURE - Return 500 for any other exceptions
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
+        }
     }
 
     @GetMapping("/country/{country}")

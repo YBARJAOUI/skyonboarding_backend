@@ -64,4 +64,12 @@ public class UserService {
         user.setCarteType(carteType);
         return userRepository.save(user);
     }
+
+    public User updateIsHasAccount(Long userId, boolean isHasAccount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setHasAccount(isHasAccount);
+        return userRepository.save(user);
+    }
+
 }

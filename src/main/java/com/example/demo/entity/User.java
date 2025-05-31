@@ -39,6 +39,8 @@ public class User {
 
     private String carteType;
 
+    private boolean hasAccount=false;
+
     // Getters et setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -60,7 +62,9 @@ public class User {
     public void setSignature(String signature) { this.signature = signature; }
     public String getCarteType() { return carteType; }
     public void setCarteType(String carteType) { this.carteType = carteType; }
-
+    public boolean getHasAccount() { return hasAccount; }
+    public void setHasAccount(boolean hasAccount) { this.hasAccount = hasAccount; }
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "agence_id")
     private Agence agence;

@@ -20,6 +20,7 @@ import java.io.InputStream;
 
 @RestController
 @RequestMapping("/api/auth")
+
 public class AuthController {
     @Autowired
     private UserService userService;
@@ -78,7 +79,7 @@ public class AuthController {
                 .map(user -> {
                     String token = jwtUtil.generateToken(username);
                     String refreshToken = jwtUtil.generateToken(username);
-
+                    boolean isHasAccount =user.getHasAccount();
                     Map<String, Object> staticJson = loadLocaleJson(localeLangage);
 
                     Map<String, Object> response = new HashMap<>();
@@ -87,6 +88,7 @@ public class AuthController {
                     response.put("token", token);
                     response.put("refreshToken", refreshToken);
                     response.put("staticJson", staticJson);
+                    response.put("isHasAccount",isHasAccount);
 
                     return ResponseEntity.ok(response);
                 })
@@ -97,14 +99,84 @@ public class AuthController {
     }
 
     @PutMapping("/update-signature-carte")
-    public ResponseEntity<User> updateSignatureAndCarteType(
+    public ResponseEntity<Map<String, String>> updateSignatureAndCarteType(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> updateRequest) {
-        String signature = updateRequest.get("signature");
-        String carteType = updateRequest.get("carteType");
-        User user = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        User updatedUser = userService.updateSignatureAndCarteType(user.getId(), signature, carteType);
-        return ResponseEntity.ok(updatedUser);
+
+        try {
+            String signature = updateRequest.get("signature");
+            String carteType = updateRequest.get("carteType");
+
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            User updatedUser = userService.updateSignatureAndCarteType(user.getId(), signature, carteType);
+
+            if (updatedUser != null) {
+
+                return ResponseEntity.ok(Map.of(
+                        "status", "000",
+                        "message", "Signature and card type updated successfully"
+                ));
+            } else {
+                // FAILURE - Return 500
+                return ResponseEntity.ok(Map.of(
+                        "status", "500",
+                        "message", "Failed to update signature and card type"
+                ));
+            }
+
+        } catch (RuntimeException e) {
+            // Handle specific business logic errors (User not found, etc.)
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            // FAILURE - Return 500 for any other exceptions
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
+        }
+    }
+
+
+    @PutMapping("/update-has-account")
+    public ResponseEntity<Map<String, String>> updateIsHasAccount(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, Boolean> requestBody) {
+
+        try {
+            boolean isHasAccount = requestBody.getOrDefault("isHasAccount", false);
+
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            User updatedUser = userService.updateIsHasAccount(user.getId(), isHasAccount);
+
+            if (updatedUser != null) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "000",
+                        "message", "isHasAccount updated successfully"
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                        "status", "500",
+                        "message", "Failed to update user"
+                ));
+            }
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
+        }
     }
 }

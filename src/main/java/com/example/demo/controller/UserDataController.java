@@ -10,6 +10,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/userdata")
 public class UserDataController {
@@ -21,27 +23,69 @@ public class UserDataController {
     private UserService userService;
 
     @PostMapping("/data")
-    public ResponseEntity<UserData> postUserData(@RequestBody UserData userData, @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<Map<String, String>> postUserData(
+            @RequestBody UserData userData,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        UserData existing = userDataService.findByUser(user);
-        UserData savedUserData;
-        if (existing != null) {
-            // Update all relevant fields
-            existing.setAddress(userData.getAddress());
-            existing.setFirstName(userData.getFirstName());
-            existing.setLastName(userData.getLastName());
-            existing.setCinId(userData.getCinId());
-            existing.setBirthDate(userData.getBirthDate());
-            existing.setBirthPlace(userData.getBirthPlace());
-            existing.setSexe(userData.getSexe());
-            existing.setSelfieFace(userData.getSelfieFace());
-            savedUserData = userDataService.saveUserData(existing);
-        } else {
-            userData.setUser(user);
-            savedUserData = userDataService.saveUserData(userData);
+        try {
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            UserData existing = userDataService.findByUser(user);
+            UserData savedUserData;
+
+            if (existing != null) {
+                // Update all relevant fields
+                existing.setAddress(userData.getAddress());
+                existing.setFirstName(userData.getFirstName());
+                existing.setLastName(userData.getLastName());
+                existing.setCinId(userData.getCinId());
+                existing.setBirthDate(userData.getBirthDate());
+                existing.setBirthPlace(userData.getBirthPlace());
+                existing.setSexe(userData.getSexe());
+                existing.setSelfieFace(userData.getSelfieFace());
+
+                savedUserData = userDataService.saveUserData(existing);
+
+                if (savedUserData != null) {
+                    // SUCCESS - Return 000
+                    return ResponseEntity.ok(Map.of(
+                            "status", "000",
+                            "message", "User data updated successfully"
+                    ));
+                } else {
+                    // FAILURE - Return 500
+                    return ResponseEntity.ok(Map.of(
+                            "status", "500",
+                            "message", "Failed to update user data"
+                    ));
+                }
+            } else {
+                // Create new user data
+                userData.setUser(user);
+                savedUserData = userDataService.saveUserData(userData);
+
+                if (savedUserData != null && savedUserData.getId() != null) {
+                    // SUCCESS - Return 000
+                    return ResponseEntity.ok(Map.of(
+                            "status", "000",
+                            "message", "User data created successfully"
+                    ));
+                } else {
+                    // FAILURE - Return 500
+                    return ResponseEntity.ok(Map.of(
+                            "status", "500",
+                            "message", "Failed to create user data"
+                    ));
+                }
+            }
+
+        } catch (Exception e) {
+            // FAILURE - Return 500 for any exceptions
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
         }
-        return ResponseEntity.ok(savedUserData);
     }
 }

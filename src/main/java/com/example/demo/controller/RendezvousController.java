@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -39,24 +40,105 @@ public class RendezvousController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // NOUVEAU: Endpoint pour récupérer le rendez-vous actuel de l'utilisateur connecté
+    @GetMapping("/current")
+    public ResponseEntity<Map<String, Object>> getCurrentRendezvous(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        try {
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Rendezvous rendezvous = rendezvousService.findByUser(user);
+
+            if (rendezvous != null) {
+                // Créer la réponse avec le rendez-vous
+                Map<String, Object> rendezvousData = new HashMap<>();
+                rendezvousData.put("id", rendezvous.getId());
+                rendezvousData.put("dateTime", rendezvous.getDateTime().toString());
+                rendezvousData.put("meetUrl", rendezvous.getMeetUrl());
+                rendezvousData.put("status", "pending"); // ou depuis votre entité si vous avez ce champ
+
+                return ResponseEntity.ok(Map.of(
+                        "status", "000",
+                        "message", "Rendez-vous trouvé",
+                        "rendezvous", rendezvousData
+                ));
+            } else {
+                // Aucun rendez-vous trouvé
+                return ResponseEntity.ok(Map.of(
+                        "status", "404",
+                        "message", "Aucun rendez-vous trouvé"
+                ));
+            }
+
+        } catch (Exception e) {
+            // Erreur
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Erreur: " + e.getMessage()
+            ));
+        }
+    }
+
     @PostMapping("/create")
-    public ResponseEntity<Rendezvous> createOrUpdateRendezvous(
+    public ResponseEntity<Map<String, String>> createOrUpdateRendezvous(
             @RequestBody Rendezvous rendezvous,
             @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Rendezvous existing = rendezvousService.findByUser(user);
-        Rendezvous savedRendezvous;
-        if (existing != null) {
-            existing.setDateTime(rendezvous.getDateTime());
-            existing.setMeetUrl(rendezvous.getMeetUrl());
-            savedRendezvous = rendezvousService.saveRendezvous(existing);
-        } else {
-            rendezvous.setUser(user);
-            savedRendezvous = rendezvousService.saveRendezvous(rendezvous);
+        try {
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Rendezvous existing = rendezvousService.findByUser(user);
+            Rendezvous savedRendezvous;
+
+            if (existing != null) {
+                // Update existing rendezvous
+                existing.setDateTime(rendezvous.getDateTime());
+                existing.setMeetUrl(rendezvous.getMeetUrl());
+                savedRendezvous = rendezvousService.saveRendezvous(existing);
+
+                if (savedRendezvous != null) {
+                    // SUCCESS - Return 000
+                    return ResponseEntity.ok(Map.of(
+                            "status", "000",
+                            "message", "Rendezvous updated successfully"
+                    ));
+                } else {
+                    // FAILURE - Return 500
+                    return ResponseEntity.ok(Map.of(
+                            "status", "500",
+                            "message", "Failed to update rendezvous"
+                    ));
+                }
+            } else {
+                // Create new rendezvous
+                rendezvous.setUser(user);
+                savedRendezvous = rendezvousService.saveRendezvous(rendezvous);
+
+                if (savedRendezvous != null && savedRendezvous.getId() != null) {
+                    // SUCCESS - Return 000
+                    return ResponseEntity.ok(Map.of(
+                            "status", "000",
+                            "message", "Rendezvous created successfully"
+                    ));
+                } else {
+                    // FAILURE - Return 500
+                    return ResponseEntity.ok(Map.of(
+                            "status", "500",
+                            "message", "Failed to create rendezvous"
+                    ));
+                }
+            }
+
+        } catch (Exception e) {
+            // FAILURE - Return 500 for any exceptions
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
         }
-        return ResponseEntity.ok(savedRendezvous);
     }
 
     @PutMapping("/update/{id}")
