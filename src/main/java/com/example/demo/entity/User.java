@@ -61,6 +61,7 @@ public class User {
     public String getCarteType() { return carteType; }
     public void setCarteType(String carteType) { this.carteType = carteType; }
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "agence_id")
     private Agence agence;
