@@ -20,7 +20,6 @@ import java.io.InputStream;
 
 @RestController
 @RequestMapping("/api/auth")
-
 public class AuthController {
     @Autowired
     private UserService userService;
@@ -173,6 +172,43 @@ public class AuthController {
                     "message", e.getMessage()
             ));
         } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
+        }
+
+        try {
+            String signature = updateRequest.get("signature");
+            String carteType = updateRequest.get("carteType");
+
+            User user = userService.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            User updatedUser = userService.updateSignatureAndCarteType(user.getId(), signature, carteType);
+
+            if (updatedUser != null) {
+                // SUCCESS - Return 000
+                return ResponseEntity.ok(Map.of(
+                        "status", "000",
+                        "message", "Signature and card type updated successfully"
+                ));
+            } else {
+                // FAILURE - Return 500
+                return ResponseEntity.ok(Map.of(
+                        "status", "500",
+                        "message", "Failed to update signature and card type"
+                ));
+            }
+
+        } catch (RuntimeException e) {
+            // Handle specific business logic errors (User not found, etc.)
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            // FAILURE - Return 500 for any other exceptions
             return ResponseEntity.ok(Map.of(
                     "status", "500",
                     "message", "Error: " + e.getMessage()

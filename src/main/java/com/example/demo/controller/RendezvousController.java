@@ -140,7 +140,6 @@ public class RendezvousController {
             ));
         }
     }
-
     @PutMapping("/update/{id}")
     public ResponseEntity<Rendezvous> updateRendezvous(
             @PathVariable Long id,

@@ -64,6 +64,7 @@ public class User {
     public void setCarteType(String carteType) { this.carteType = carteType; }
     public boolean getHasAccount() { return hasAccount; }
     public void setHasAccount(boolean hasAccount) { this.hasAccount = hasAccount; }
+
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "agence_id")
