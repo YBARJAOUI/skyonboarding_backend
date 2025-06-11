@@ -44,6 +44,8 @@ public class UserDataController {
                 existing.setBirthPlace(userData.getBirthPlace());
                 existing.setSexe(userData.getSexe());
                 existing.setSelfieFace(userData.getSelfieFace());
+                existing.setDocfront(userData.getDocfront());
+                existing.setDocback(userData.getDocback());
 
                 savedUserData = userDataService.saveUserData(existing);
 

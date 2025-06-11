@@ -35,6 +35,28 @@ public class UserData {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String selfieFace;
 
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
+    private String docfront;
+
+    public String getDocfront() {
+        return docfront;
+    }
+
+    public void setDocfront(String docfront) {
+        this.docfront = docfront;
+    }
+
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
+    private String docback;
+
+    public String getDocback() {
+        return docback;
+    }
+
+    public void setDocback(String docback) {
+        this.docback = docback;
+    }
+
     @JsonIgnore
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
