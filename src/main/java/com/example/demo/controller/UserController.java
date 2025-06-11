@@ -305,4 +305,57 @@ public class UserController {
             ));
         }
     }
+    // Add this method to the existing UserController class
+
+    @GetMapping("/{id}/all-data")
+    public ResponseEntity<?> getUserDataById(@PathVariable Long id) {
+        try {
+            Optional<User> userOptional = userService.findById(id);
+
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "404",
+                        "message", "User not found"
+                ));
+            }
+
+            User user = userOptional.get();
+
+            // Create a response map to hold all the data
+            Map<String, Object> responseData = new HashMap<>();
+
+            // Add user data
+            responseData.put("user", user);
+
+            // Add Step1 data if exists
+            step1Service.findByUser(user).ifPresent(step1 -> {
+                responseData.put("step1", step1);
+            });
+
+            // Add Step2 data if exists
+            Step2Entity step2 = step2Service.findByUser(user);
+            if (step2 != null) {
+                responseData.put("step2", step2);
+            }
+
+            // Add UserData if exists
+            UserData userData = userDataService.findByUser(user);
+            if (userData != null) {
+                responseData.put("userData", userData);
+            }
+
+            // Add Agence data if user has an assigned agency
+            if (user.getAgence() != null) {
+                responseData.put("agence", user.getAgence());
+            }
+
+            return ResponseEntity.ok(responseData);
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "500",
+                    "message", "Error: " + e.getMessage()
+            ));
+        }
+    }
 }

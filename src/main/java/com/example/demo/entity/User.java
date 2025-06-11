@@ -39,7 +39,15 @@ public class User {
 
     private String carteType;
 
-    private boolean hasAccount=false;
+    private boolean hasAccount = false;
+
+    // Add role field
+    @Column(nullable = false)
+    private String role = "USER"; // USER, ADMIN
+
+    // Add agenceId field for easier access
+    @Column(name = "agence_id")
+    private Long agenceId;
 
     // Getters et setters
     public Long getId() { return id; }
@@ -64,10 +72,14 @@ public class User {
     public void setCarteType(String carteType) { this.carteType = carteType; }
     public boolean getHasAccount() { return hasAccount; }
     public void setHasAccount(boolean hasAccount) { this.hasAccount = hasAccount; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public Long getAgenceId() { return agenceId; }
+    public void setAgenceId(Long agenceId) { this.agenceId = agenceId; }
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "agence_id")
+    @JoinColumn(name = "agence_id", insertable = false, updatable = false)
     private Agence agence;
 
     // Getters and setters
@@ -77,6 +89,9 @@ public class User {
 
     public void setAgence(Agence agence) {
         this.agence = agence;
+        if (agence != null) {
+            this.agenceId = agence.getId();
+        }
     }
 
     @JsonIgnore

@@ -78,7 +78,7 @@ public class AuthController {
                 .map(user -> {
                     String token = jwtUtil.generateToken(username);
                     String refreshToken = jwtUtil.generateToken(username);
-                    boolean isHasAccount =user.getHasAccount();
+                    boolean isHasAccount = user.getHasAccount();
                     Map<String, Object> staticJson = loadLocaleJson(localeLangage);
 
                     Map<String, Object> response = new HashMap<>();
@@ -87,16 +87,17 @@ public class AuthController {
                     response.put("token", token);
                     response.put("refreshToken", refreshToken);
                     response.put("staticJson", staticJson);
-                    response.put("isHasAccount",isHasAccount);
+                    response.put("isHasAccount", isHasAccount);
+                    response.put("role", user.getRole()); // Add role to response
+                    response.put("userId", user.getId()); // Add user ID for reference
 
                     return ResponseEntity.ok(response);
                 })
                 .orElse(ResponseEntity.status(401).body(Map.of(
-                    "code", "002",
-                    "label", "Identifiants invalides"
+                        "code", "002",
+                        "label", "Identifiants invalides"
                 )));
     }
-
     @PutMapping("/update-signature-carte")
     public ResponseEntity<Map<String, String>> updateSignatureAndCarteType(
             @AuthenticationPrincipal UserDetails userDetails,

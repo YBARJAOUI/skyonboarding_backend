@@ -26,6 +26,9 @@ public class Agence {
     @Column
     private Double longitude;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @JsonIgnore
     @OneToMany(mappedBy = "agence")
     private List<User> users;
@@ -77,6 +80,14 @@ public class Agence {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public List<User> getUsers() {

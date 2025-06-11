@@ -31,10 +31,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()  // Ajouté cette ligne
-                        .requestMatchers("/api/dropdowns/**").authenticated()
+                        .requestMatchers("/auth/**").permitAll()
+                        // Admin only endpoints for backoffice
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/agence/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/rendezvous/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/dropdowns/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/step1/**").hasRole("USER")
+                        .requestMatchers("/api/step2/**").hasRole("USER")
+                        .requestMatchers("/api/userdata/**").hasRole("USER")
                         .anyRequest().authenticated()
-
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
