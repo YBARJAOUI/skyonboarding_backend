@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         // Admin only endpoints for backoffice
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/api/agence/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/api/rendezvous/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/api/dropdowns/**").hasAnyRole("ADMIN", "USER")

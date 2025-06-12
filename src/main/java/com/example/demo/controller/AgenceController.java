@@ -71,39 +71,63 @@ public class AgenceController {
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
 
         try {
+            System.out.println("=== AGENCE ASSIGNMENT DEBUG ===");
+            System.out.println("User details: " + userDetails.getUsername());
+            System.out.println("User authorities: " + userDetails.getAuthorities());
+            System.out.println("Agence ID: " + agenceId);
+
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
+
+            System.out.println("Found user: " + user.getUsername());
+            System.out.println("User role: " + user.getRole());
+            System.out.println("Current user agence: " + (user.getAgence() != null ? user.getAgence().getName() : "null"));
 
             Agence agence = agenceService.findById(agenceId)
                     .orElseThrow(() -> new RuntimeException("Agence not found"));
 
+            System.out.println("Found agence: " + agence.getName());
+
             // Assign agence to user
             user.setAgence(agence);
+
+            // Use the service method that properly handles the relationship
             User updatedUser = userService.saveUser(user);
 
-            if (updatedUser != null && updatedUser.getAgence() != null &&
-                    updatedUser.getAgence().getId().equals(agenceId)) {
+            // Force refresh from database to verify the save
+            User verifiedUser = userService.findById(updatedUser.getId())
+                    .orElseThrow(() -> new RuntimeException("User verification failed"));
+
+            System.out.println("After save - User agence: " +
+                    (verifiedUser.getAgence() != null ? verifiedUser.getAgence().getName() : "null"));
+
+            if (verifiedUser.getAgence() != null &&
+                    verifiedUser.getAgence().getId().equals(agenceId)) {
                 // SUCCESS - Return 000
+                System.out.println("Assignment successful - verified in database");
                 return ResponseEntity.ok(Map.of(
                         "status", "000",
                         "message", "Agence assigned successfully"
                 ));
             } else {
                 // FAILURE - Return 500
+                System.out.println("Assignment failed - verification failed");
                 return ResponseEntity.ok(Map.of(
                         "status", "500",
-                        "message", "Failed to assign agence to user"
+                        "message", "Failed to assign agence to user - database verification failed"
                 ));
             }
 
         } catch (RuntimeException e) {
-            // Handle specific business logic errors
+            System.out.println("Runtime exception: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.ok(Map.of(
                     "status", "500",
                     "message", e.getMessage()
             ));
         } catch (Exception e) {
-            // FAILURE - Return 500 for any other exceptions
+            System.out.println("General exception: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.ok(Map.of(
                     "status", "500",
                     "message", "Error: " + e.getMessage()
