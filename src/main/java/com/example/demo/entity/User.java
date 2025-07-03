@@ -1,12 +1,14 @@
 package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,15 +43,10 @@ public class User {
 
     private boolean hasAccount = false;
 
-    // Add role field
     @Column(nullable = false)
     private String role = "USER"; // USER, ADMIN
 
-    // FIXED: Remove the agenceId field and make the relationship properly mutable
-    // The issue was having both agenceId and the @ManyToOne relationship
-    // This causes Hibernate to consider the relationship immutable
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "agence_id", nullable = true)
     private Agence agence;
 
@@ -57,7 +54,7 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Rendezvous> rendezvousList;
 
-    // Getters and setters
+    // Getters and setters remain the same...
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -94,7 +91,6 @@ public class User {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    // Fixed agence getter and setter
     public Agence getAgence() {
         return agence;
     }
@@ -103,7 +99,6 @@ public class User {
         this.agence = agence;
     }
 
-    // Helper method to get agence ID (for JSON serialization if needed)
     public Long getAgenceId() {
         return agence != null ? agence.getId() : null;
     }

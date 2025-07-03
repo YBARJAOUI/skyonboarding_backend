@@ -1,11 +1,15 @@
 package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "rendezvous")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Rendezvous {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +33,12 @@ public class Rendezvous {
     @Column(nullable = true)
     private String adminNotes;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(nullable = true)
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = true)
     private LocalDateTime updatedAt;
 
     public enum RendezvousStatus {
@@ -58,7 +64,6 @@ public class Rendezvous {
 
     public void setDateTime(LocalDateTime dateTime) {
         this.dateTime = dateTime;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public User getUser() {
@@ -75,7 +80,6 @@ public class Rendezvous {
 
     public void setMeetUrl(String meetUrl) {
         this.meetUrl = meetUrl;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public RendezvousStatus getStatus() {
@@ -84,7 +88,6 @@ public class Rendezvous {
 
     public void setStatus(RendezvousStatus status) {
         this.status = status;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public String getAdminNotes() {
@@ -93,7 +96,6 @@ public class Rendezvous {
 
     public void setAdminNotes(String adminNotes) {
         this.adminNotes = adminNotes;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public LocalDateTime getCreatedAt() {
@@ -110,10 +112,5 @@ public class Rendezvous {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

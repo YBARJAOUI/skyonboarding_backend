@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -211,11 +212,18 @@ public class AdminController {
         }
     }
 
-    // Appointment management for admin
+    // FIXED: Appointment management for admin with proper user population
     @GetMapping("/appointments")
-    public ResponseEntity<List<Rendezvous>> getAllAppointments() {
-        List<Rendezvous> appointments = rendezvousService.getAllRendezvous();
-        return ResponseEntity.ok(appointments);
+    public ResponseEntity<List<Map<String, Object>>> getAllAppointments() {
+        try {
+            List<Rendezvous> appointments = rendezvousService.getAllRendezvous();
+            List<Map<String, Object>> appointmentDTOs = appointments.stream()
+                    .map(this::convertToAppointmentDTO)
+                    .toList();
+            return ResponseEntity.ok(appointmentDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/appointments")
@@ -227,7 +235,7 @@ public class AdminController {
 
             Rendezvous rendezvous = new Rendezvous();
             rendezvous.setUser(user);
-            rendezvous.setDateTime(java.time.LocalDateTime.parse(request.get("dateTime").toString()));
+            rendezvous.setDateTime(LocalDateTime.parse(request.get("dateTime").toString()));
             if (request.get("meetUrl") != null) {
                 rendezvous.setMeetUrl(request.get("meetUrl").toString());
             }
@@ -237,7 +245,7 @@ public class AdminController {
             return ResponseEntity.ok(Map.of(
                     "code", "000",
                     "label", "Appointment created successfully",
-                    "appointment", savedRendezvous
+                    "appointment", convertToAppointmentDTO(savedRendezvous)
             ));
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of(
@@ -248,32 +256,165 @@ public class AdminController {
     }
 
     @PutMapping("/appointments/{id}")
-    public ResponseEntity<Rendezvous> updateAppointment(
+    public ResponseEntity<Map<String, Object>> updateAppointment(
             @PathVariable Long id,
-            @RequestBody Rendezvous rendezvous) {
+            @RequestBody Map<String, Object> appointmentData) {
 
-        Optional<Rendezvous> existingOpt = rendezvousService.findById(id);
-        if (!existingOpt.isPresent()) {
-            return ResponseEntity.notFound().build();
+        try {
+            Optional<Rendezvous> existingOpt = rendezvousService.findById(id);
+            if (!existingOpt.isPresent()) {
+                return ResponseEntity.ok(Map.of(
+                        "code", "404",
+                        "label", "Appointment not found"
+                ));
+            }
+
+            Rendezvous existing = existingOpt.get();
+
+            // Update dateTime if provided
+            if (appointmentData.containsKey("dateTime")) {
+                existing.setDateTime(LocalDateTime.parse(appointmentData.get("dateTime").toString()));
+            }
+
+            // Update meetUrl if provided
+            if (appointmentData.containsKey("meetUrl")) {
+                existing.setMeetUrl((String) appointmentData.get("meetUrl"));
+            }
+
+            // Update status if provided
+            if (appointmentData.containsKey("status")) {
+                String statusStr = appointmentData.get("status").toString();
+                try {
+                    Rendezvous.RendezvousStatus status = Rendezvous.RendezvousStatus.valueOf(statusStr.toUpperCase());
+                    existing.setStatus(status);
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.ok(Map.of(
+                            "code", "400",
+                            "label", "Invalid status value: " + statusStr
+                    ));
+                }
+            }
+
+            // Update admin notes if provided
+            if (appointmentData.containsKey("adminNotes")) {
+                existing.setAdminNotes((String) appointmentData.get("adminNotes"));
+            }
+
+            Rendezvous updated = rendezvousService.saveRendezvous(existing);
+
+            return ResponseEntity.ok(Map.of(
+                    "code", "000",
+                    "label", "Appointment updated successfully",
+                    "appointment", convertToAppointmentDTO(updated)
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "code", "500",
+                    "label", "Error updating appointment: " + e.getMessage()
+            ));
         }
-
-        Rendezvous existing = existingOpt.get();
-        existing.setDateTime(rendezvous.getDateTime());
-        existing.setMeetUrl(rendezvous.getMeetUrl());
-
-        Rendezvous updated = rendezvousService.saveRendezvous(existing);
-        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/appointments/{id}")
-    public ResponseEntity<Map<String, Boolean>> deleteAppointment(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteAppointment(@PathVariable Long id) {
         try {
+            Optional<Rendezvous> existingOpt = rendezvousService.findById(id);
+            if (!existingOpt.isPresent()) {
+                return ResponseEntity.ok(Map.of(
+                        "code", "404",
+                        "label", "Appointment not found"
+                ));
+            }
+
             rendezvousService.deleteRendezvous(id);
-            Map<String, Boolean> response = new HashMap<>();
-            response.put("deleted", Boolean.TRUE);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of(
+                    "code", "000",
+                    "label", "Appointment deleted successfully"
+            ));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.ok(Map.of(
+                    "code", "500",
+                    "label", "Error deleting appointment: " + e.getMessage()
+            ));
         }
+    }
+
+    // NEW: Get appointment statistics
+    @GetMapping("/appointments/stats")
+    public ResponseEntity<Map<String, Object>> getAppointmentStats() {
+        try {
+            List<Rendezvous> appointments = rendezvousService.getAllRendezvous();
+
+            long total = appointments.size();
+            long pending = appointments.stream()
+                    .filter(a -> a.getStatus() == Rendezvous.RendezvousStatus.PENDING)
+                    .count();
+            long confirmed = appointments.stream()
+                    .filter(a -> a.getStatus() == Rendezvous.RendezvousStatus.CONFIRMED)
+                    .count();
+            long completed = appointments.stream()
+                    .filter(a -> a.getStatus() == Rendezvous.RendezvousStatus.COMPLETED)
+                    .count();
+            long cancelled = appointments.stream()
+                    .filter(a -> a.getStatus() == Rendezvous.RendezvousStatus.CANCELLED)
+                    .count();
+            long rejected = appointments.stream()
+                    .filter(a -> a.getStatus() == Rendezvous.RendezvousStatus.REJECTED)
+                    .count();
+
+            // Today's appointments
+            LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            long todayAppointments = appointments.stream()
+                    .filter(a -> a.getDateTime().isAfter(startOfDay) && a.getDateTime().isBefore(endOfDay))
+                    .count();
+
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("total", total);
+            stats.put("pending", pending);
+            stats.put("confirmed", confirmed);
+            stats.put("completed", completed);
+            stats.put("cancelled", cancelled);
+            stats.put("rejected", rejected);
+            stats.put("todayAppointments", todayAppointments);
+
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error fetching appointment statistics"));
+        }
+    }
+
+    // Helper method to convert Rendezvous to DTO with user information
+    private Map<String, Object> convertToAppointmentDTO(Rendezvous rendezvous) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", rendezvous.getId());
+        dto.put("dateTime", rendezvous.getDateTime().toString());
+        dto.put("userId", rendezvous.getUser().getId());
+        dto.put("meetUrl", rendezvous.getMeetUrl());
+        dto.put("status", rendezvous.getStatus().toString());
+        dto.put("adminNotes", rendezvous.getAdminNotes());
+        dto.put("createdAt", rendezvous.getCreatedAt().toString());
+        dto.put("updatedAt", rendezvous.getUpdatedAt() != null ? rendezvous.getUpdatedAt().toString() : null);
+
+        // Add user information
+        User user = rendezvous.getUser();
+        Map<String, Object> userDto = new HashMap<>();
+        userDto.put("id", user.getId());
+        userDto.put("username", user.getUsername());
+        userDto.put("nationality", user.getNationality());
+
+        // Add agency information if available
+        if (user.getAgence() != null) {
+            Map<String, Object> agenceDto = new HashMap<>();
+            agenceDto.put("id", user.getAgence().getId());
+            agenceDto.put("name", user.getAgence().getName());
+            agenceDto.put("country", user.getAgence().getCountry());
+            userDto.put("agence", agenceDto);
+        }
+
+        dto.put("user", userDto);
+
+        return dto;
     }
 }
