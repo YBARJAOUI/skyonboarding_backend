@@ -11,12 +11,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/rendezvous")
@@ -259,7 +256,6 @@ public class RendezvousController {
         }
     }
 
-    // Admin endpoints for managing rendezvous status
     @PutMapping("/admin/{id}/status")
     public ResponseEntity<Map<String, String>> updateRendezvousStatus(
             @PathVariable Long id,
